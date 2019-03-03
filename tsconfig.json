@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "jsx": "react",
+    "module": "commonjs",
+    "importHelpers": true,
+    "target": "esnext",
+    "types": [
+      "node"
+    ],
+    "typeRoots": [
+      "node_modules/@types",
+    ],
+    "moduleResolution": "node",
+    "noEmit": true,
+    "pretty": true,
+    "sourceMap": true
+  },
+  "include": [
+    "./src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+  ]
+}
