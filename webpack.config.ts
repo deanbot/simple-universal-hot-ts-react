@@ -63,6 +63,7 @@ export default env => {
   ]
 
   const client = {
+    name: 'client',
     ...shared,
     devtool: ifProd('source-map', 'cheap-module-eval-source-map'),
     ...ifProd({}, {
@@ -108,6 +109,7 @@ export default env => {
   }
 
   const server = {
+    name: 'server',
     ...shared,
     entry: {
       server: removeEmpty([
