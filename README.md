@@ -1,20 +1,23 @@
 # It's a boilerplate! 👶
 
-This one is good for you if you like:
-  * Rendering React server-side via Express
-  * Using TS for everything but still compiling your server down to js
-  * Building quickly and sexily with concurrant webpack builds for server and client
+This is a good starting point for an isomorphic react app built in TS.
+
+Features: 
+  * Renders React server-side via Express
+  * Provides API endpoints via Express
+  * Uses TS for everything (including Webpack)
+  * Compiles server down to js
+  * Babel + Webpack used for compilation (not tsc)
+  * Builds uses concurrant webpack builds for server and client
   * Hot Module Replacement for server _and_ client 🤩
-  * Avoiding
+  * Webpack dev server for client development
+  * Avoids:
     * Node.js API build scripts 
     * cluttered package.json scripts
-    * maintaining multiple webpack config files
-    * semicolons
-
-## Go forth adventurer 🧙
+    * maintaining multiple Webpack config files
+    * having to use `import * as [...] from '[...]'` syntax due to differences in module format between Webpack and TS by compiling with Babel + Webpack instead of tsc 
 
 # Get Started
-_By Topic_
 
 **Install** deps
 
@@ -26,6 +29,10 @@ _(alias for `yarn build` -> `yarn serve`)_
 
     yarn start
 
+**Deveolop** server and client with webpack dev server serving the client and with HMR in both server and client
+
+    yarn dev
+
 **Build** client and server 
 
 _(server goes to `build` and client/assets go to `dist`)_
@@ -35,10 +42,6 @@ _(server goes to `build` and client/assets go to `dist`)_
 **Serve** the latest build
       
     yarn serve
-
-**Deveolop** with HMR server & client
-
-    yarn dev
 
 # environments
 
@@ -58,6 +61,17 @@ _(server goes to `build` and client/assets go to `dist`)_
     * built in `./build` 
   * client 
     * build in `./dist`
+
+# The big idea
+
+1. ts-node used automatically to parse `webpack.config.ts` during calls to webpack or webpack-dev-server.
+2. all other code is built via webpack + babel-loader using @babel/typescript preset.
+3. server compiled down to build/server.js and is launched via node
+4. during dev the start-server-webpack-plugin handles initial launch and relaunching server on changes after webpack build.
+5. webpack dev server serves client via entries in webpack config (i.e. `webpack-dev-server/client?http://localhost:8080`)
+6. api requests are proxied to the correct server address (aka http://localhost:3000/api) during development.
+7. cors is implemented on the server during development to accept the requests from differing location.
+8. HMR implemented in server and client by properties in webpack config and by marking server (aka in `src/server/inedx.tsx`) and react app (aka in `src/app/App.tsx`) components as hot-exported (webpack.HotModuleReplacementPlugin && react-hot-loader).
 
 # Application Requirements
 

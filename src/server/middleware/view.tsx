@@ -1,7 +1,7 @@
 import express from "express";
 import React from 'react';
 import { renderToString } from 'react-dom/server';
-import App from '../../simpleApp/App';
+import App from '../../app/SimpleApp';
 declare let __USE_CLIENT_RENDER_ONLY__;
 
 export default express.Router()
