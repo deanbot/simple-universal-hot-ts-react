@@ -7,11 +7,14 @@
   "license": "MIT",
   "scripts": {
     "clean": "rimraf build dist",
-    "build": "yarn clean && webpack --env.prod -p ",
+    "build": "yarn clean && webpack --env.prod -p",
+    "dev": "npm-run-all --parallel dev:server dev:client",
+    "dev:server": "rimraf build && webpack --env.dev --env.target=server --watch",
+    "dev:client": "webpack-dev-server --env.dev --env.target=client --open",
     "prestart": "yarn build",
     "start": "yarn serve",
     "serve": "node ./build/server.js",
-    "dev": "webpack-dev-server --env.dev --open"
+    "dev:broken": "webpack-dev-server --env.dev --open"
   },
   "devDependencies": {
     "@babel/cli": "7.2.3",

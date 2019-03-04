@@ -3,7 +3,6 @@ import { getIfUtils, removeEmpty } from 'webpack-config-utils';
 import * as nodeExternals from 'webpack-node-externals';
 const WebpackBar = require('webpackbar');
 const webpack = require('webpack');
-// todo add in working yarn add webpack plugin
 const StartServerPlugin = require('start-server-webpack-plugin');
 
 export default env => {
@@ -28,7 +27,13 @@ export default env => {
       rules: [
         {
           test: /\.(ts|tsx)$/,
-          loader: 'babel-loader',
+          exclude: /(node_modules|bower_components)/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              cacheDirectory: true
+            }
+          }
         },
       ]
     },
@@ -37,73 +42,25 @@ export default env => {
 
   // plugins shared between server and client
   const sharedPlugins = [
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(
+        ifProd('production', 'development')
+      )
+    }),
+
     ...ifProd(
       // prod plugins
       [
-        new webpack.DefinePlugin({
-          'process.env.NODE_ENV': JSON.stringify('production')
-        }),
+
       ],
 
       // dev plugins
       [
-        // todo add in working yarn add webpack plugin
         new webpack.HotModuleReplacementPlugin(),
-        new webpack.NoEmitOnErrorsPlugin(),
+        new webpack.NoEmitOnErrorsPlugin()
       ]
     )
   ]
-
-  const server = {
-    ...shared,
-    entry: {
-      server: removeEmpty([
-        ifNotProd('webpack/hot/poll?1000'),
-        path.join(__dirname, 'src', 'server', 'index'),
-      ])
-    },
-    output: {
-      path: path.join(__dirname, 'build'),
-      filename: 'server.js',
-    },
-    devtool: 'source-map',
-    plugins: removeEmpty([
-      ...sharedPlugins,
-
-      new webpack.DefinePlugin({
-        __USE_CLIENT_RENDER_ONLY__: useClientRenderOnly,
-      }),
-
-      ...ifProd(
-        // prod plugins
-        [
-          new webpack.BannerPlugin({
-            banner: 'require("source-map-support").install();',
-            raw: true,
-            entryOnly: false
-          })
-        ],
-
-        // dev plugins
-        [
-          new StartServerPlugin()
-        ]
-      ),
-
-      new WebpackBar({
-        color: 'orange',
-        name: 'Server',
-      }),
-    ]),
-    externals: [nodeExternals({
-      whitelist: ['webpack/hot/poll?1000']
-    })],
-    target: 'node',
-    node: {
-      __dirname: true,
-      fs: 'empty'
-    }
-  }
 
   const client = {
     ...shared,
@@ -112,6 +69,8 @@ export default env => {
       devServer: {
         historyApiFallback: true,
         hot: true,
+        noInfo: true,
+        // inline: true,
         proxy: {
           '/api': `http://${HOST}:${PORT}`
         },
@@ -133,11 +92,77 @@ export default env => {
     target: 'web',
     plugins: removeEmpty([
       ...sharedPlugins,
+
+      ...ifProd(
+        [],
+        [
+          new webpack.NoEmitOnErrorsPlugin(),
+        ]
+      ),
+
       new WebpackBar({
         color: 'green',
         name: 'Client',
       }),
     ])
+  }
+
+  const server = {
+    ...shared,
+    entry: {
+      server: removeEmpty([
+        ifNotProd('webpack/hot/poll?1000'),
+        path.join(__dirname, 'src', 'server', 'index'),
+      ])
+    },
+    output: {
+      path: path.join(__dirname, 'build'),
+      filename: 'server.js',
+    },
+    devtool: 'source-map',
+    plugins: removeEmpty([
+      ...sharedPlugins,
+
+      ...ifProd(
+        // prod plugins
+        [
+          new webpack.BannerPlugin({
+            banner: 'require("source-map-support").install();',
+            raw: true,
+            entryOnly: false
+          })
+        ],
+
+        // dev plugins
+        [
+          new StartServerPlugin(),
+        ]
+      ),
+
+      new webpack.DefinePlugin({
+        __USE_CLIENT_RENDER_ONLY__: useClientRenderOnly,
+      }),
+
+      new WebpackBar({
+        color: 'orange',
+        name: 'Server',
+      }),
+    ]),
+    externals: [nodeExternals({
+      whitelist: ['webpack/hot/poll?1000']
+    })],
+    target: 'node',
+    node: {
+      __dirname: true,
+      fs: 'empty'
+    }
+  }
+
+  // pass --env.target=server|client to return a single config
+  if (env.target == 'server') {
+    return server;
+  } else if (env.target == 'client') {
+    return client;
   }
 
   return [

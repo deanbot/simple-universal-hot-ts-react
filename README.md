@@ -8,7 +8,10 @@ Features:
   * Uses TS for everything (including Webpack)
   * Compiles server down to js
   * Babel + Webpack used for compilation (not tsc)
-  * Builds uses concurrant webpack builds for server and client
+  * Concurrent Webpack builds for server and client (_*sort of_)
+
+😖 *Due to an issue with server-side HMR, only the prod build is concurrent. Hopefully the hacky solution is fixable.
+
   * Hot Module Replacement for server _and_ client 🤩
   * Webpack dev server for client development
   * Avoids:
@@ -43,7 +46,7 @@ _(server goes to `build` and client/assets go to `dist`)_
       
     yarn serve
 
-# environments
+# Environments
 
 * dev (via `yarn dev`)
   * server 
@@ -56,7 +59,7 @@ _(server goes to `build` and client/assets go to `dist`)_
     * built virtuallly
     * dev server uses `/index.html` at root
     * proxies requests to /api to version with correct port (localhost:3000/api)
-* production (via `yarn build`)
+* production (via `yarn build` or `yarn start`)
   * server
     * built in `./build` 
   * client 
@@ -65,13 +68,19 @@ _(server goes to `build` and client/assets go to `dist`)_
 # The big idea
 
 1. ts-node used automatically to parse `webpack.config.ts` during calls to webpack or webpack-dev-server.
-2. all other code is built via webpack + babel-loader using @babel/typescript preset.
-3. server compiled down to build/server.js and is launched via node
-4. during dev the start-server-webpack-plugin handles initial launch and relaunching server on changes after webpack build.
-5. webpack dev server serves client via entries in webpack config (i.e. `webpack-dev-server/client?http://localhost:8080`)
-6. api requests are proxied to the correct server address (aka http://localhost:3000/api) during development.
-7. cors is implemented on the server during development to accept the requests from differing location.
-8. HMR implemented in server and client by properties in webpack config and by marking server (aka in `src/server/inedx.tsx`) and react app (aka in `src/app/App.tsx`) components as hot-exported (webpack.HotModuleReplacementPlugin && react-hot-loader).
+1. all other code is built via webpack + babel-loader using @babel/typescript preset.
+1. express server compiled down to `/build/server.js` and is launched via node
+1. webpack config is a function accepting env params (for managing 'dev', 'prod', etc) passed via cli
+1. webpack config returns an array of configs allowing parallel build
+1. ~~single call to webpack-dev-server in `dev` script builds both configs in watch mode but only the first instance with devServer is used for the dev server~~
+
+😖 Server-side HMR only working if I launch each webpack config separately. See `dev:server` and `dev:client`. Hopefully this hack is temporary.
+
+1. during dev the start-server-webpack-plugin handles initial launch and relaunching of express server on changes after webpack build
+1. webpack dev server serves client via entries in webpack config (i.e. `webpack-dev-server/client?http://localhost:8080`)
+1. api requests are proxied to the correct server address (aka http://localhost:3000/api) during development
+1. cors is implemented on the server during development to accept the requests from differing location
+1. HMR implemented in server and client by settings in webpack config and by marking server (aka in `src/server/index.tsx`) and react app (aka in `src/app/App.tsx`) components as hot-exported (webpack.HotModuleReplacementPlugin & react-hot-loader)
 
 # Application Requirements
 
